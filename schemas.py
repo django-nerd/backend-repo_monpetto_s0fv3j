@@ -1,48 +1,55 @@
 """
-Database Schemas
+Database Schemas for Library Management System
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
+Each Pydantic model represents a MongoDB collection.
+The collection name is the lowercase of the class name.
 
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Examples:
+- Book -> "book"
+- Member -> "member"
+- Loan -> "loan"
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List
 
-# Example schemas (replace with your own):
 
-class User(BaseModel):
+class Book(BaseModel):
     """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
+    Books collection schema
+    Collection name: "book"
     """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    title: str = Field(..., description="Book title")
+    author: str = Field(..., description="Author full name")
+    isbn: Optional[str] = Field(None, description="ISBN-10 or ISBN-13")
+    total_copies: int = Field(1, ge=0, description="Total number of copies in library")
+    available_copies: int = Field(1, ge=0, description="Currently available copies")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Topic tags")
 
-class Product(BaseModel):
+
+class Member(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Members collection schema
+    Collection name: "member"
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    name: str = Field(..., description="Member full name")
+    email: EmailStr = Field(..., description="Member email address")
+    membership_id: Optional[str] = Field(None, description="Library-issued member ID")
+    phone: Optional[str] = Field(None, description="Phone number")
+    is_active: bool = Field(True, description="Whether the membership is active")
 
-# Add your own schemas here:
-# --------------------------------------------------
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Loan(BaseModel):
+    """
+    Loans collection schema
+    Collection name: "loan"
+    """
+    book_id: str = Field(..., description="Referenced book _id as string")
+    member_id: str = Field(..., description="Referenced member _id as string")
+    loan_date: Optional[str] = Field(None, description="ISO datetime when loan started")
+    due_date: Optional[str] = Field(None, description="ISO datetime when due")
+    return_date: Optional[str] = Field(None, description="ISO datetime when returned")
+    status: str = Field("borrowed", description="borrowed | returned | overdue")
+
+
+# Note: The Flames database viewer can read these via GET /schema
